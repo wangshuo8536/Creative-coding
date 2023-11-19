@@ -1,0 +1,88 @@
+import processing.video.*;
+
+int gridSize = 30; // 网格大小，减小该值以使方块更紧凑
+int numShapes = 20; // 形状数量
+int shapeSizeRange = 10; // 形状大小的范围
+int colorStep = 255 / numShapes; // 颜色变化步长
+
+float[][] shapeSizes; // 存储形状的大小
+float[][] shapePositions; // 存储形状的位置
+float[][] shapeAlphas; // 存储形状的透明度
+
+boolean isPaused = false; // 是否暂停动画
+
+MovieMaker movieMaker; // 视频导出对象
+
+void setup() {
+  size(600, 600);
+  background(255);
+
+  shapeSizes = new float[numShapes][numShapes];
+  shapePositions = new float[numShapes][numShapes];
+  shapeAlphas = new float[numShapes][numShapes];
+
+  // 随机初始化形状的大小、位置和透明度
+  for (int i = 0; i < numShapes; i++) {
+    for (int j = 0; j < numShapes; j++) {
+      shapeSizes[i][j] = random(shapeSizeRange) + 1;
+      shapePositions[i][j] = random(gridSize);
+      shapeAlphas[i][j] = 0;
+    }
+  }
+
+  // 创建视频导出对象
+  movieMaker = new MovieMaker(this, width, height, "output.mp4", 30);
+}
+
+void draw() {
+  if (!isPaused) {
+    background(255);
+
+    for (int i = 0; i < numShapes; i++) {
+      for (int j = 0; j < numShapes; j++) {
+        float x = i * gridSize + shapePositions[i][j];
+        float y = j * gridSize + shapePositions[i][j];
+
+        // 根据网格位置计算颜色
+        int r = i * colorStep;
+        int g = j * colorStep;
+        int b = (i + j) * colorStep;
+
+        fill(r, g, b, shapeAlphas[i][j]);
+        noStroke();
+
+        // 在每个网格位置绘制形状
+        drawShape(x, y, shapeSizes[i][j]);
+
+        // 对形状进行透明度和大小变化
+        shapeAlphas[i][j] += 2;
+        shapeSizes[i][j] += random(-0.1, 0.1);
+
+        // 当透明度超过255时，重新初始化形状的大小、位置和透明度
+        if (shapeAlphas[i][j] > 255) {
+          shapeSizes[i][j] = random(shapeSizeRange) + 1;
+          shapePositions[i][j] = random(gridSize);
+          shapeAlphas[i][j] = 0;
+        }
+      }
+    }
+
+    // 将当前帧添加到视频中
+    movieMaker.addFrame();
+  }
+}
+
+void drawShape(float x, float y, float size) {
+  // 绘制几何形状
+  // 这里使用矩形作为示例，你可以根据需要自定义
+  rect(x, y, size, size);
+}
+
+void keyPressed() {
+  if (key == 'r') {
+    isPaused = !isPaused; // 切换暂停状态
+  } else if (key == 's') {
+    // 结束视频导出并保存视频文件
+    movieMaker.finish();
+  }
+}
