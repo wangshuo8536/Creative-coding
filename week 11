@@ -1,0 +1,65 @@
+int bgWidth = 500;
+int bgHeight = 500;
+float lineSize = 0;
+float colSize = 0;
+
+color[] colors = {#f7d358, #ffffff, #f4efd2};
+//Define the fill color
+int totalRects = 0;
+int whiteRects = 0;
+float minSize = 20; // 设置最小矩形大小
+int lastTime = 0; // 记录上一次重画的时间
+
+void mondrianStyle() {
+  background(#ffffff);
+  for (int line = 0; line < bgHeight; line += lineSize + 3) {
+    lineSize = random(minSize, bgWidth/6); 
+    for (int col = 0; col < bgWidth; col += colSize + 3) {
+      colSize = random(minSize, bgHeight/4); 
+      // Define the color block size
+
+      // 随机选择一部分矩形进行宽高比例的调整
+      if (random(1) < 0.5) {
+        while (abs(colSize - lineSize) > min(colSize, lineSize) * 0.5) {
+          colSize = random(minSize, bgHeight/4);
+        }
+      }
+
+      color rectColor;
+      if (whiteRects < totalRects * 0.5) {
+        rectColor = #30ad8d; 
+        whiteRects++;
+      } else {
+        rectColor = colors[int(random(colors.length))];
+      }
+      totalRects++;
+      fill(rectColor);
+      rect(col, line, colSize, lineSize);
+      //Drawing color blocks
+
+      strokeWeight(3);
+      stroke(#000000);
+      float x = col+colSize;
+      float y = line+lineSize;
+      line(0, y, bgWidth, y);
+      line(x, line, x, y);
+      //Drawing Black lines
+    }
+  }
+}
+
+void setup() {
+  size(500, 500);
+  mondrianStyle();
+  //First run
+}
+
+void draw() {
+  if (millis() - lastTime > 500) {
+    mondrianStyle();
+    lastTime = millis();
+  }
+  //Regenerate every 500 milliseconds
+  println ("frameRate;"+frameRate);
+  saveFrame();
+}
