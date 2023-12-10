@@ -1,0 +1,96 @@
+String imgPath = "sasuke.jpg";
+PImage img;
+int num = 10000;
+
+// 定义粒子的数组
+Particle[] particles = new Particle[num];
+
+void setup() {
+  size(800, 600); // 设置窗口的大小
+  noStroke(); // 取消描边
+  img = loadImage(imgPath); // 加载图片
+  img.resize(width, height); // 调整图片的大小
+
+  for (int i = 0; i < num; i++) {
+    PVector loc = new PVector(random(width), random(height)); // 随机生成粒子的位置
+    PVector target = new PVector(random(width), random(height)); // 随机生成粒子的目标位置
+    float rad = random(TWO_PI); // 随机生成粒子的初始角度
+    PVector speed = new PVector(cos(rad), sin(rad)); // 根据角度生成粒子的速度
+    float size = random(2, 10); // 随机生成粒子的大小
+    color col = color(0); // 把粒子的颜色设为黑色
+    particles[i] = new Particle(loc, target, speed, size, col); // 创建粒子对象
+  }
+}
+
+void draw() {
+  background(255);
+  image(img, 0, 0);
+  
+  for (int i = 0; i < num; i++) {
+    particles[i].run(); // 更新并绘制粒子
+  }
+  println ("frameRate;"+frameRate);
+  saveFrame();
+}
+
+
+// 定义粒子类
+class Particle {
+  // 定义粒子的属性
+  PVector loc; // 位置
+  PVector target; // 目标位置
+  PVector speed; // 速度
+  float size; // 大小
+  color col; // 颜色
+  boolean moving; // 是否在移动
+
+  // 定义粒子的构造函数
+  Particle(PVector _loc, PVector _target, PVector _speed, float _size, color _col) {
+    loc = _loc; // 初始化位置
+    target = _target; // 初始化目标位置
+    speed = _speed; // 初始化速度
+    size = _size; // 初始化大小
+    col = _col; // 初始化颜色
+    moving = true; // 初始化移动状态
+  }
+
+  // 定义粒子的运动方法
+  void run() {
+    move(); // 移动粒子
+    checkEdges(); // 检查边界
+    render(); // 绘制粒子
+  }
+
+  // 定义粒子的移动方法
+  void move() {
+    if (moving) {
+      // 计算粒子到目标位置的距离和方向
+      PVector dir = PVector.sub(target, loc);
+      float dist = dir.mag();
+      dir.normalize();
+
+      // 如果距离小于速度，就让粒子直接到达目标位置
+      if (dist < speed.mag()) {
+        loc = target.copy();
+      } else {
+        // 否则，就让粒子沿着方向移动
+        loc.add(PVector.mult(dir, speed.mag()));
+      }
+    }
+  }
+
+  // 定义粒子的边界检查方法
+  void checkEdges() {
+    // 如果粒子到达目标位置，就停止移动，并根据位置获取图片的颜色
+    if (loc.equals(target)) {
+      moving = false;
+      col = img.get(int(loc.x), int(loc.y));
+    }
+  }
+
+  // 定义粒子的绘制方法
+  void render() {
+    fill(col); // 设置粒子的颜色
+    ellipse(loc.x, loc.y, size, size); // 绘制粒子的形状
+  }
+}
