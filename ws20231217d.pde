@@ -1,0 +1,82 @@
+ArrayList<Rhombus> rhombuses;
+
+PVector[][] vp;
+
+int heightSection = 36;//花瓶高度细分数
+int laySection = 72;//花瓶每层扇面细分数
+float layerHeight = 20;//每层高度
+
+float rotateRange = PI;//花瓶轴向扭曲弧度值
+
+boolean showNormalLine;//是否显示法线
+
+float ProbOfShowShape = 0.75;//每个菱形单元的显示概率
+float ProbOfShowContourShape = 0.5;//每个菱形单元绘制内轮廓的概率
+
+void setup() {
+  size(1200, 1200, P3D);
+  surface.setLocation(50, 50);
+  
+  UI();
+
+  setSystem();
+}
+
+void setSystem() {
+  initiateModelData();//初始化构成花瓶的空间向量数组
+  buildMesh(vp);//基于空间向量数组创建菱形对象
+
+  for (Rhombus r : rhombuses) {
+    if (random(1)<ProbOfShowShape) {//如果该随机值满足该概率条件
+      r.drawShape = true;
+      if (random(1)<ProbOfShowContourShape){//如果该随机值满足该概率条件
+        r.drawContour = true;
+      }  
+    }
+  }
+}
+
+void draw() {
+  background(102);
+
+  lights();
+
+  for (Rhombus r : rhombuses) {//遍历所有的菱形
+    r.run();
+  }
+  cam.beginHUD();
+  slider.draw();
+  cam.endHUD();
+  if ((mouseX<500 && mouseY< 360) || (mouseX<150 && mouseY > height-150)) {//此限定区域为滑块所在位置
+    cam.setActive(false);
+  } else {
+    cam.setActive(true);
+  }
+}
+void initiateModelData() {
+  vp= new PVector[heightSection][laySection];//生成一个heightSection X laySection的网格，并未网格上的每个点（向量）赋值
+  for (int i = 0; i < vp.length; i ++) {
+    float angSection = TWO_PI / vp[0].length;//每一层圆面切分为扇面后每个扇面的角的值
+    float sectionPhaseAngle = rotateRange / vp.length;//花瓶整体扭曲角分配到每层的相位值
+    float radiu = bezierPoint(100, 200, 300, 100, i / (float)vp.length);//每一层的半径由贝塞尔曲线计算
+    for (int j = 0; j < vp[0].length; j ++) {
+      float xx = radiu * cos(angSection * j + sectionPhaseAngle * i);
+      float yy = radiu * sin(angSection * j + sectionPhaseAngle * i);
+      float zz = layerHeight * i;//每一层的z值随层数线上叠加
+      vp[i][j] = new PVector(xx, yy, zz);
+    }
+  }
+}
+void buildMesh(PVector[][] model) {
+  rhombuses = new ArrayList<Rhombus>();
+
+  for (int i = 0; i < model.length-1; i ++) {
+    for (int j = 0; j < model[0].length; j ++) {
+      PVector p1 = new PVector(model[i][j].x, model[i][j].y, model[i][j].z);
+      PVector p2 = new PVector(model[i+1][j].x, model[i+1][j].y, model[i+1][j].z);
+      PVector p3 = new PVector(model[i][(j+1)%model[0].length].x, model[i][(j+1)%model[0].length].y, model[i][(j+1)%model[0].length].z);
+      PVector p4 = new PVector(model[i+1][(j+1)%model[0].length].x, model[i+1][(j+1)%model[0].length].y, model[i+1][(j+1)%model[0].length].z);
+      rhombuses.add(new Rhombus(p1, p2, p3, p4));//每四个点组成一个菱形
+    }
+  }
+}
