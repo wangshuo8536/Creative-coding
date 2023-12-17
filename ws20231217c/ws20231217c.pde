@@ -45,6 +45,8 @@ void draw() {
 
   for (Rhombus r : rhombuses) {//遍历所有的菱形
     r.run();
+  println ("frameRate;"+frameRate);
+  saveFrame();
   }
   cam.beginHUD();
   slider.draw();
